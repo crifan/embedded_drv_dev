@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<!DOCTYPE chapter
+[
+<!ENTITY % crl_ent PUBLIC "crl.ent" 'http://www.crifan.com/files/res/docbook/entity/crl.ent'>
+%crl_ent;
+
+]>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xl="http://www.w3.org/1999/xlink"
+
+    xml:id="ch03_emb_drv_wince">
+
+<title>嵌入式驱动开发之WinCE</title>
+<abstract></abstract>
+
+<para>嵌入式系统WinCE平台下面的驱动开发，有空再介绍。</para>
+
+</chapter>

@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<!DOCTYPE chapter
+[
+<!ENTITY % crl_ent PUBLIC "crl.ent" 'http://www.crifan.com/files/res/docbook/entity/crl.ent'>
+%crl_ent;
+
+]>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xl="http://www.w3.org/1999/xlink"
+
+    xml:id="ch01_emb_drv_linux">
+
+<title>嵌入式驱动开发之通用内容</title>
+<abstract></abstract>
+
+<para>嵌入式驱动开发，不论是哪个平台，其基本上都有一些通用的知识和概念。此处总结一下：</para>
+
+<sect1 xml:id="what_drv_do"><title>驱动做了哪些事情</title>
+    <para>其实要想去搞懂，嵌入式驱动开发，首先需要搞懂，对于驱动本身，做了哪些事情。</para>
+    <para>简单说就是：</para>
+    <itemizedlist>
+        <listitem>初始化配置设备
+            <para>写init方面的代码，负责将设备初始化好，便于后续的使用</para>
+            <para>其中包括去操作设备的寄存器，配置设备为对应的你所需要模式</para>
+            <para></para>
+        </listitem>
+        <listitem>实现设备的数据的接受和发送（或者叫读取和写入）
+            <para>然后就是去负责实现设备的send/receive，或者叫read/write方面的函数了。</para>
+            <para>这样，当有数据被读取或写入时，有数据需要发送或接受时，就可以调用驱动底层的函数，负责数据的收发了。</para>
+            <para></para>
+        </listitem>
+    </itemizedlist>
+    <para>如此，设备才可以正常的工作起来。</para>
+    <para>另外，针对驱动的概念的解释，也可以参考这个：<link xl:href="http://www.zhihu.com/question/28758504/answer/42010371">虽然经常听说驱动，但是驱动具体是啥？ - 知乎</link></para>
+</sect1>
+
+<sect1 xml:id="write_drv_process"><title>写驱动的基本逻辑和流程</title>
+    <para>想要去写嵌入式驱动时的基本的逻辑和过程是：</para>
+    <orderedlist>
+        <listitem>知道设备本身的工作原理
+            <para>比如要给Nand Flash写驱动，那么要知道Nand Flash本身的工作原理</para>
+            <para>包括但不限于：</para>
+            <itemizedlist>
+                <listitem>Nand Flash的物理内部存储结构
+                    <para>Nand Flash中的Chip，Plane，Block，Page，OOB等的概念</para>
+                    <para></para>
+                </listitem>
+                <listitem>Nand Flash的数据是如何读取和写入的
+                    <para>如何基于Page去读取数据，基于Block去擦除数据</para>
+                    <para>如何发送不同的命令，去实现数据的Page的读取，Block的擦除</para>
+                </listitem>
+            </itemizedlist>
+            <para></para>
+        </listitem>
+        <listitem>假如是没有操作系统，没有驱动框架时，该设备的驱动如何一点点实现
+            <para>然后就是要去搞明白，如果是，在没有操作系统的情况下</para>
+            <para>比如没有嵌入式Linux，没有WinCE等嵌入式系统的话</para>
+            <para>此时的设备的驱动如何写</para>
+            <para>比如对于Nand Flash来说，想要让里面写数据</para>
+            <orderedlist>
+                <listitem>准备好要写的数据
+                    <para>比如把要写的数据，放在一个缓存buffer里</para>
+                    <para></para>
+                </listitem>
+                <listitem>计算出要写入的目标地址
+                    <para>基于Nand Flash的Block，Page，OOB等特殊结构，计算出要写入的Block，Page，OOB的编号和具体的地址</para>
+                    <para></para>
+                </listitem>
+                <listitem>看看是否要在写之前先擦除对应的Block
+                    <para>由于Nand Flash的特殊性，Block只能写一次。第二次如果再要往里面写入数据，则先要备份之前已写入的数据，重新擦除Block，组织要新的整个Block的数据，然后再写入</para>
+                    <para>此处，就要去判断和管理，当该Block已经有了数据，则要先把之前的数据读出来，然后擦除，准备好新数据，再写入</para>
+                </listitem>
+                <listitem>然后再去发送对应的Write Block的命令
+                    <para>准备好要写的数据后，再去发送对应的命令，实现数据的写入</para>
+                    <para></para>
+                </listitem>
+            </orderedlist>
+            <para>并且，在写一个完整的Nand Flash的驱动之前，还需要去实现，专门用于管理Nand Flash的Block的管理程序，包括坏块的管理，负载平衡的管理等等。</para>
+            <para>具体细节，可参考：</para>
+            <para><link xl:href="http://www.crifan.com/files/doc/docbook/linux_nand_driver/release/html/linux_nand_driver.html">【详解】如何编写Linux下Nand Flash驱动</link></para>
+            <para></para>
+        </listitem>
+        <listitem>再去看看编写驱动所在的平台和框架，已经帮你实现了哪些部分了
+            <para>然后再去看看你所在的平台，比如嵌入式Linux，WinCE，其中针对该驱动，是属于什么（子驱动）框架</para>
+            <para>比如嵌入式Linux中的，和Nand Flash相关的就是MTD驱动框架</para>
+            <para>然后看看框架和平台已经帮你实现了哪些功能</para>
+            <para>比如MTD框架中，已经帮你实现了通用的Nand Flash的各种命令，各种基于Page，Block，OOB等方面的操作</para>
+            <para></para>
+        </listitem>
+        <listitem>然后再去实现平台框架没实现的，剩余的，和设备相关的部分的代码
+            <para>然后再去实现那些和设备相关的，框架和平台肯定也没法帮你实现的，那部分代码，</para>
+            <para>而这些代码，往往就是：操作对应的硬件的寄存器，去实现设备的初始化和设置，配置</para>
+            <para>比如针对你自己的Nand Flash的Controller，去设置对应的时钟clock，开启硬件ECC校验，等等。</para>
+            <para>以及实现数据的读写接口</para>
+            <para>比如Nand Flash中，实现你自己的Nand Flash Controller的对应的底层数据buffer的数据的读取和写入，期间往往又会涉及到，如何在读取和写入时利用自己的硬件的ECC校验算法，以保证数据的正确性。</para>
+            <para>这些底层细节，和自己硬件设备相关的细节，都是需要你自己实现的。</para>
+        </listitem>
+    </orderedlist>
+    <para>虽然上述的举例主要是举的嵌入式Linux中的例子，但是实际上对应的逻辑，也完全适用于WinCE</para>
+    <para>需要的读者，可以自己去研究，WinCE中，针对于Nand Flash，是属于什么子框架，以及该框架帮你实现了哪些功能，还剩什么方面的功能需要你自己实现，应该也是设备初始化相关和数据收发相关的部分。</para>
+    <para></para>
+    <para></para>
+    <para></para>
+    <para></para>
+</sect1>
+
+</chapter>
